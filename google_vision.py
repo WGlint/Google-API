@@ -2,7 +2,6 @@ import argparse
 import os
 import subprocess
 import logging
-import requests
 import random
 from pprint import pprint
 
@@ -25,12 +24,13 @@ subprocess.run([
     "pip3", "install", "--upgrade", "google-cloud-vision",
 ])
 subprocess.run([
-    "pip3", "install", "Pillow", "supabase", "load-bar", "python-magic"
+    "pip3", "install", "Pillow", "supabase", "load-bar", "python-magic", "requests"
 ])
 subprocess.run([
     "clear"
 ])
 
+import requests
 import loadbar
 import mimetypes
 import google.auth.transport.requests
@@ -129,21 +129,24 @@ class AILabel:
 
     def create_list_label(self, response : dict, url : list) -> list:
         list_label = []
-        for i, element in enumerate(url):
-            labels = []
-            try :
-                for label in response["responses"][i]["labelAnnotations"]:
-                    labels.append({
-                        label["description"] : label["score"]
-                    })
-                list_label.append(
-                    {
-                        "name": element["name"],
-                        "label": labels
-                    }
-                )
-            except KeyError:
-                print(f"\n\nWARNING ! Picture {element['name']} it's not download by Google ! \n\n")
+        try :
+            for i, element in enumerate(url):
+                labels = []
+                try :
+                    for label in response["responses"][i]["labelAnnotations"]:
+                        labels.append({
+                            label["description"] : label["score"]
+                        })
+                    list_label.append(
+                        {
+                            "name": element["name"],
+                            "label": labels
+                        }
+                    )
+                except KeyError:
+                    print(f"\n\nWARNING ! Picture {element['name']} it's not download by Google ! \n\n")
+        except :
+            raise(f"\n\nWARNING ! Google API return error ! \n\n")
 
         return list_label
 
@@ -209,10 +212,10 @@ if __name__ == '__main__':
     args = parser.parse_args()
 
     create_label = AILabel(
-        url_supabase="https://tqolweoqyhlblpkdcule.supabase.co",
-        key_supabase="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRxb2x3ZW9xeWhsYmxwa2RjdWxlIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTY5NTU3MzE2NSwiZXhwIjoyMDExMTQ5MTY1fQ.CCbgp-12qdtFVAYlwKZSrrRZPVsw5ZFPImYL6bc72uM",
+        url_supabase=args.url,
+        key_supabase=args.key,
         name_folder=args.image,
         bucket=args.bucket,
-        json_api="formazone-8e53616858ff.json",
+        json_api=args.json_api,
         nLabel=args.nLabel
     )
